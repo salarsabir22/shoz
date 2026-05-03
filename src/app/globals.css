@@ -1,40 +1,75 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #f6f3ee;
-  --foreground: #1a1c19;
-  --surface: #ffffff;
-  --border: #e3ddd4;
-  --muted: #5c5f57;
-  --text: #1a1c19;
-  --accent: #2f6f4f;
-  --accent-dark: #245438;
-  --accent-soft: #e8f2eb;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #121410;
-    --foreground: #f2efe8;
-    --surface: #1b1d19;
-    --border: #2e322b;
-    --muted: #a8aea3;
-    --text: #f2efe8;
-    --accent: #6ecf9b;
-    --accent-dark: #9ae4b8;
-    --accent-soft: #1f2a22;
+    --background: 60 33% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 153 43% 17%;
+    --primary-foreground: 60 33% 98%;
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 60 10% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 43 96% 56%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 60 33% 98%;
+    --border: 60 10% 88%;
+    --input: 60 10% 88%;
+    --ring: 153 43% 17%;
+    --radius: 0.75rem;
+    --chart-1: 153 43% 35%;
+    --chart-2: 43 96% 48%;
+    --chart-3: 60 20% 70%;
+    --chart-4: 25 90% 55%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 60 33% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 60 33% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 60 33% 98%;
+    --primary: 153 35% 42%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 60 10% 70%;
+    --accent: 43 96% 56%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 60 33% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 153 35% 42%;
+    --chart-1: 153 43% 45%;
+    --chart-2: 43 96% 55%;
+    --chart-3: 60 15% 45%;
+    --chart-4: 25 85% 50%;
+    --chart-5: 340 70% 50%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

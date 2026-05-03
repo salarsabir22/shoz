@@ -1,79 +1,84 @@
--- Smart Surplus Food Marketplace — run in Supabase SQL Editor (new project)
+-- SaveBite schema — run in Supabase SQL editor (or psql)
+-- After tables exist, enable realtime for listings:
+--   alter publication supabase_realtime add table public.listings;
 
 create extension if not exists "pgcrypto";
 
-create table public.listings (
+create table if not exists users (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  venue_name text not null,
-  item_name text not null,
+  email text unique not null,
+  password_hash text not null,
+  name text not null,
+  role text check (role in ('customer', 'business')) not null,
+  avatar_url text,
+  notify_deals boolean default true,
+  notify_reminders boolean default true,
+  created_at timestamptz default now()
+);
+
+create table if not exists businesses (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references users(id) on delete cascade,
+  name text not null,
   description text,
-  address text,
-  latitude double precision,
-  longitude double precision,
-  whatsapp_phone text not null,
-  original_price_cents int not null check (original_price_cents > 0),
-  discount_at_start int not null check (discount_at_start between 0 and 95),
-  discount_at_end int not null check (discount_at_end between 0 and 95),
-  deal_start timestamptz not null,
-  deal_end timestamptz not null,
-  quantity_available int not null check (quantity_available >= 0),
-  mystery_bag boolean not null default false,
-  constraint deal_times check (deal_end > deal_start),
-  constraint discount_monotonic check (discount_at_end >= discount_at_start)
+  address text not null,
+  lat float not null,
+  lng float not null,
+  category text check (category in ('bakery', 'cafe', 'restaurant', 'grocery')),
+  phone text,
+  logo_url text,
+  rating float default 0,
+  verified boolean default false,
+  created_at timestamptz default now()
 );
 
-create table public.reservations (
+create table if not exists listings (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  listing_id uuid not null references public.listings (id) on delete cascade,
-  customer_name text not null,
-  customer_phone text,
-  quantity int not null default 1 check (quantity >= 1)
+  business_id uuid references businesses(id) on delete cascade,
+  title text not null,
+  description text,
+  category text,
+  original_price numeric(10,2) not null,
+  current_price numeric(10,2) not null,
+  quantity_total int not null,
+  quantity_remaining int not null,
+  pickup_start timestamptz not null,
+  pickup_end timestamptz not null,
+  photo_url text,
+  is_mystery_bag boolean default false,
+  status text check (status in ('active', 'sold_out', 'expired', 'cancelled')) default 'active',
+  created_at timestamptz default now()
 );
 
-create index listings_deal_end_idx on public.listings (deal_end);
-create index reservations_listing_id_idx on public.reservations (listing_id);
+create table if not exists reservations (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid references listings(id),
+  customer_id uuid references users(id),
+  quantity int not null default 1,
+  total_price numeric(10,2) not null,
+  status text check (status in ('pending', 'confirmed', 'picked_up', 'cancelled')) default 'confirmed',
+  reservation_code text unique not null,
+  created_at timestamptz default now()
+);
 
-alter table public.listings enable row level security;
-alter table public.reservations enable row level security;
+create table if not exists impact_logs (
+  id uuid primary key default gen_random_uuid(),
+  reservation_id uuid references reservations(id),
+  co2_saved_kg float,
+  meals_saved int,
+  money_saved numeric(10,2),
+  created_at timestamptz default now()
+);
 
--- Public read: active surplus only
-create policy "Anyone can read active listings"
-  on public.listings
-  for select
-  using (
-    quantity_available > 0
-    and deal_end > now()
-  );
+create table if not exists favorites (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references users(id) on delete cascade,
+  business_id uuid references businesses(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (customer_id, business_id)
+);
 
--- No direct client writes; server uses service role key
-
--- Aggregate impact for the homepage (anon can call; returns totals only, no PII)
-create or replace function public.get_community_impact()
-returns json
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select json_build_object(
-    'meals_saved',
-    (select coalesce(sum(quantity), 0)::bigint from public.reservations),
-    'money_saved_cents',
-    (select coalesce(
-      sum(
-        round(l.original_price_cents::numeric * ((l.discount_at_start + l.discount_at_end) / 2.0 / 100.0))
-        * r.quantity::numeric
-      ),
-      0
-    )::bigint
-    from public.reservations r
-    join public.listings l on l.id = r.listing_id),
-    'co2_kg_estimate',
-    round((select coalesce(sum(quantity), 0) from public.reservations) * 2.5::numeric, 1)
-  );
-$$;
-
-revoke all on function public.get_community_impact() from public;
-grant execute on function public.get_community_impact() to anon, authenticated;
+create index if not exists idx_listings_business on listings(business_id);
+create index if not exists idx_listings_status on listings(status);
+create index if not exists idx_reservations_customer on reservations(customer_id);
+create index if not exists idx_favorites_customer on favorites(customer_id);

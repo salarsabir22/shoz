@@ -1,21 +1,32 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Shoz — surplus food nearby",
+  title: "SaveBite — Smart Surplus Food",
   description:
-    "Connect cafés and bakeries with nearby customers for discounted surplus before closing.",
+    "Connect with restaurants and cafes to rescue surplus food at a discount before closing time.",
 };
 
 export default function RootLayout({
@@ -24,12 +35,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans min-h-screen`}
+      >
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
