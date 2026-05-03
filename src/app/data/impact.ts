@@ -1,7 +1,7 @@
 import "server-only";
 
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isSupabaseAdminConfigured } from "@/lib/env";
+import { createPublicSupabase } from "@/lib/supabase/public";
+import { isSupabasePublicConfigured } from "@/lib/env";
 
 export type ImpactTotals = {
   mealsSaved: number;
@@ -9,64 +9,48 @@ export type ImpactTotals = {
   co2KgEstimate: number;
 };
 
-/** Rough meal CO₂ equivalent for storytelling (order of magnitude). */
-const KG_CO2_PER_MEAL = 2.5;
+const ZERO: ImpactTotals = {
+  mealsSaved: 0,
+  moneySavedCents: 0,
+  co2KgEstimate: 0,
+};
 
-export async function fetchImpactTotals(): Promise<ImpactTotals | null> {
-  if (!isSupabaseAdminConfigured()) return null;
+type RpcRow = {
+  meals_saved?: number;
+  money_saved_cents?: number;
+  co2_kg_estimate?: number;
+};
+
+/** Uses public Supabase + DB RPC (no service role). Run `supabase/community_impact.sql` if missing. */
+export async function fetchImpactTotals(): Promise<ImpactTotals> {
+  if (!isSupabasePublicConfigured()) return ZERO;
   try {
-    const supabase = createAdminSupabase();
-    const { data: reservations, error: rErr } = await supabase
-      .from("reservations")
-      .select("quantity, listing_id");
+    const supabase = createPublicSupabase();
+    const { data, error } = await supabase.rpc("get_community_impact");
 
-    if (rErr) return null;
-    if (!reservations?.length) {
-      return { mealsSaved: 0, moneySavedCents: 0, co2KgEstimate: 0 };
+    if (error) {
+      console.warn("[impact]", error.message);
+      return ZERO;
     }
 
-    const listingIds = [
-      ...new Set(reservations.map((r) => r.listing_id as string)),
-    ];
-    const { data: listings, error: lErr } = await supabase
-      .from("listings")
-      .select("id, original_price_cents, discount_at_start, discount_at_end")
-      .in("id", listingIds);
-
-    if (lErr || !listings) {
-      return { mealsSaved: 0, moneySavedCents: 0, co2KgEstimate: 0 };
+    let row: RpcRow | null = null;
+    if (typeof data === "string") {
+      try {
+        row = JSON.parse(data) as RpcRow;
+      } catch {
+        return ZERO;
+      }
+    } else if (data && typeof data === "object") {
+      row = data as RpcRow;
     }
-
-    const priceById = new Map(
-      listings.map((l) => [
-        l.id as string,
-        {
-          original: l.original_price_cents as number,
-          d0: l.discount_at_start as number,
-          d1: l.discount_at_end as number,
-        },
-      ])
-    );
-
-    let mealsSaved = 0;
-    let moneySavedCents = 0;
-
-    for (const row of reservations) {
-      const qty = (row.quantity as number) ?? 1;
-      mealsSaved += qty;
-      const p = priceById.get(row.listing_id as string);
-      if (!p) continue;
-      const avgDiscount = (p.d0 + p.d1) / 2;
-      const savedPer = Math.round(p.original * (avgDiscount / 100));
-      moneySavedCents += savedPer * qty;
-    }
+    if (!row) return ZERO;
 
     return {
-      mealsSaved,
-      moneySavedCents,
-      co2KgEstimate: Math.round(mealsSaved * KG_CO2_PER_MEAL * 10) / 10,
+      mealsSaved: Number(row.meals_saved ?? 0),
+      moneySavedCents: Number(row.money_saved_cents ?? 0),
+      co2KgEstimate: Number(row.co2_kg_estimate ?? 0),
     };
   } catch {
-    return null;
+    return ZERO;
   }
 }
