@@ -73,3 +73,8 @@
     text-wrap: balance;
   }
 }
+
+/* Keep map under modals / drawers */
+.leaflet-container {
+  z-index: 0;
+}
