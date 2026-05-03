@@ -242,7 +242,7 @@ export default function BusinessDashboardPage() {
             <StatCard title="Sold today" value={String(stats.soldTodayCount)} icon={TrendingUp} />
             <StatCard
               title="Revenue recovered (today)"
-              value={`₺${stats.revenueRecoveredToday.toFixed(0)}`}
+              value={`Rs.${stats.revenueRecoveredToday.toFixed(0)}`}
               icon={Banknote}
             />
             <StatCard title="CO₂ saved (est.)" value={`${stats.co2SavedKg} kg`} icon={Leaf} />
@@ -275,7 +275,7 @@ export default function BusinessDashboardPage() {
                       <TableRow key={l.id}>
                         <TableCell className="font-medium">{l.title}</TableCell>
                         <TableCell>{l.quantity_remaining}</TableCell>
-                        <TableCell>₺{Number(l.current_price).toFixed(2)}</TableCell>
+                        <TableCell>Rs.{Number(l.current_price).toFixed(2)}</TableCell>
                         <TableCell>{format(new Date(l.pickup_end), "MMM d, HH:mm")}</TableCell>
                         <TableCell>
                           <Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status}</Badge>
@@ -400,7 +400,7 @@ export default function BusinessDashboardPage() {
                       name="original_price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Original price (₺)</FormLabel>
+                          <FormLabel>Original price (Rs.)</FormLabel>
                           <FormControl>
                             <Input type="number" step="0.01" {...field} />
                           </FormControl>
@@ -469,7 +469,7 @@ export default function BusinessDashboardPage() {
                     <p className="mt-1 text-muted-foreground">
                       Current dynamic price:{" "}
                       <span className="font-mono font-semibold text-foreground">
-                        {previewPrice !== null ? `₺${previewPrice.toFixed(2)}` : "—"}
+                        {previewPrice !== null ? `Rs.${previewPrice.toFixed(2)}` : "—"}
                       </span>
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -532,7 +532,7 @@ export default function BusinessDashboardPage() {
                 stats.topItems.map((t) => (
                   <div key={t.title} className="flex justify-between text-sm">
                     <span>{t.title}</span>
-                    <span className="font-mono">₺{t.revenue.toFixed(0)}</span>
+                    <span className="font-mono">Rs.{t.revenue.toFixed(0)}</span>
                   </div>
                 ))
               )}

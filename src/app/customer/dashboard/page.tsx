@@ -247,7 +247,7 @@ export default function CustomerDashboardPage() {
                           <TableCell>{format(new Date(r.created_at), "MMM d, yyyy")}</TableCell>
                           <TableCell>{r.listings?.businesses?.name ?? "—"}</TableCell>
                           <TableCell>{r.listings?.title ?? "—"}</TableCell>
-                          <TableCell>₺{Number(r.total_price).toFixed(2)}</TableCell>
+                          <TableCell>Rs.{Number(r.total_price).toFixed(2)}</TableCell>
                           <TableCell>
                             <Badge variant="secondary">{r.status}</Badge>
                           </TableCell>
@@ -267,7 +267,7 @@ export default function CustomerDashboardPage() {
               <p className="font-display text-5xl font-bold text-primary">{impact.totalMealsSaved}</p>
               <p className="text-sm text-muted-foreground">total meals saved from waste</p>
               <div className="grid gap-4 md:grid-cols-3">
-                <ImpactStat icon={PiggyBank} label="Money saved (est.)" value={`₺${impact.totalMoneySaved}`} />
+                <ImpactStat icon={PiggyBank} label="Money saved (est.)" value={`Rs.${impact.totalMoneySaved}`} />
                 <ImpactStat icon={Leaf} label="CO₂ prevented (kg)" value={impact.totalCo2Saved} />
                 <ImpactStat icon={Building2} label="Businesses tried" value={impact.businessesTried} />
               </div>

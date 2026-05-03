@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DEFAULT_MAP_LAT, DEFAULT_MAP_LNG } from "@/lib/region";
 
 export type GeoState = {
   lat: number | null;
@@ -8,9 +9,6 @@ export type GeoState = {
   status: "idle" | "loading" | "granted" | "denied" | "unavailable";
   error: string | null;
 };
-
-const DEFAULT_LAT = 41.0082;
-const DEFAULT_LNG = 28.9784;
 
 export function useGeolocation() {
   const [state, setState] = React.useState<GeoState>({
@@ -23,8 +21,8 @@ export function useGeolocation() {
   const request = React.useCallback(() => {
     if (!navigator.geolocation) {
       setState({
-        lat: DEFAULT_LAT,
-        lng: DEFAULT_LNG,
+        lat: DEFAULT_MAP_LAT,
+        lng: DEFAULT_MAP_LNG,
         status: "unavailable",
         error: "Geolocation not supported",
       });
@@ -42,8 +40,8 @@ export function useGeolocation() {
       },
       (err) => {
         setState({
-          lat: DEFAULT_LAT,
-          lng: DEFAULT_LNG,
+          lat: DEFAULT_MAP_LAT,
+          lng: DEFAULT_MAP_LNG,
           status: err.code === 1 ? "denied" : "unavailable",
           error: err.message,
         });
@@ -60,7 +58,7 @@ export function useGeolocation() {
     if (state.lat !== null && state.lng !== null) {
       return { lat: state.lat, lng: state.lng };
     }
-    return { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
+    return { lat: DEFAULT_MAP_LAT, lng: DEFAULT_MAP_LNG };
   }, [state.lat, state.lng]);
 
   return { ...state, coords, request };

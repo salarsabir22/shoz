@@ -17,25 +17,25 @@ const GRAIN = `url("data:image/svg+xml,${encodeURIComponent(
 
 const featured = [
   {
-    title: "Sunset meze box",
-    price: "₺160",
-    was: "₺320",
-    img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
-    tag: "Nişantaşı",
+    title: "Biryani & raita box",
+    price: "Rs.480",
+    was: "Rs.960",
+    img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
+    tag: "Burns Road",
   },
   {
     title: "Sourdough & jam",
-    price: "₺70",
-    was: "₺140",
+    price: "Rs.350",
+    was: "Rs.700",
     img: "https://images.unsplash.com/photo-1586444538869-86e37b0ef498?w=800",
-    tag: "Galata",
+    tag: "Clifton",
   },
   {
     title: "Mystery pastry bag",
-    price: "₺45",
-    was: "₺90",
+    price: "Rs.220",
+    was: "Rs.440",
     img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800",
-    tag: "Moda",
+    tag: "Gulshan",
     mystery: true,
   },
 ];
@@ -90,8 +90,8 @@ export default function HomePage() {
             Great food. Half the price. Zero waste.
           </motion.h1>
           <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-            SaveBite connects Istanbul eateries with neighbors who want great meals — rescued from going unsold before
-            closing time.
+            SaveBite connects Karachi cafés, bakeries, and restaurants with neighbors who want great meals — rescued
+            from going unsold before closing time.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="lg" asChild>

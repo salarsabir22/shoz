@@ -74,8 +74,10 @@ export function DealCard({ deal, highlight, onHover }: Props) {
         </div>
         <h3 className="font-display text-xl font-semibold leading-snug">{deal.title}</h3>
         <div className="flex items-baseline gap-2">
-          <span className="text-sm text-muted-foreground line-through">₺{Number(deal.original_price).toFixed(2)}</span>
-          <span className="text-2xl font-bold text-primary">₺{Number(deal.current_price).toFixed(2)}</span>
+          <span className="text-sm text-muted-foreground line-through">
+            Rs.{Number(deal.original_price).toFixed(2)}
+          </span>
+          <span className="text-2xl font-bold text-primary">Rs.{Number(deal.current_price).toFixed(2)}</span>
         </div>
         <QuantityBar remaining={deal.quantity_remaining} total={deal.quantity_total} />
         <p className="flex items-center gap-2 text-sm text-muted-foreground">

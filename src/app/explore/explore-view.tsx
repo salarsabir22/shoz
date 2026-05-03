@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_CITY_LABEL } from "@/lib/region";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { DealCard, type DealWithMeta } from "@/components/custom/DealCard";
@@ -173,7 +174,9 @@ export function ExploreView() {
           />
         </div>
         {status === "denied" ? (
-          <p className="text-xs text-muted-foreground">Location denied — showing Istanbul center.</p>
+          <p className="text-xs text-muted-foreground">
+            Location denied — showing {DEFAULT_CITY_LABEL} city centre.
+          </p>
         ) : null}
       </div>
 

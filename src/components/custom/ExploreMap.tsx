@@ -23,7 +23,7 @@ function createPriceIcon(deal: DealWithMeta, highlighted: boolean): L.DivIcon {
   const bg = highlighted ? "hsl(43 96% 56%)" : "hsl(153 43% 17%)";
   const fg = highlighted ? "hsl(0 0% 10%)" : "hsl(60 33% 98%)";
   const ring = highlighted ? "box-shadow:0 0 0 2px hsl(153 43% 17%);" : "";
-  const price = `₺${Number(deal.current_price).toFixed(0)}`;
+  const price = `Rs.${Number(deal.current_price).toFixed(0)}`;
   const html = `<button type="button" aria-label="Open ${deal.title.replace(/"/g, "&quot;")}" style="min-width:3.25rem;padding:4px 10px;border-radius:9999px;border:2px solid #fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.18);background:${bg};color:${fg};${ring}">${price}</button>`;
   return L.divIcon({
     className: "leaflet-price-marker border-0 bg-transparent",

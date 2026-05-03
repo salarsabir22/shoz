@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hashPassword, setAuthCookie, signToken } from "@/lib/auth";
+import { DEFAULT_MAP_LAT, DEFAULT_MAP_LNG } from "@/lib/region";
 import { createServerSupabase } from "@/lib/supabase";
 import type { UserRole } from "@/types";
 
@@ -62,8 +63,8 @@ export async function POST(req: Request) {
         category: business.category,
         phone: business.phone ?? null,
         description: null,
-        lat: 41.0082,
-        lng: 28.9784,
+        lat: DEFAULT_MAP_LAT,
+        lng: DEFAULT_MAP_LNG,
         logo_url: null,
         rating: 0,
         verified: false,

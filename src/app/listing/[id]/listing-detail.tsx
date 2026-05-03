@@ -160,8 +160,10 @@ export function ListingDetail({ listingId }: Props) {
             <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{listing.title}</h1>
             <div className="flex flex-wrap items-center gap-3">
               <DiscountBadge pickupEnd={listing.pickup_end} />
-              <span className="text-muted-foreground line-through">₺{Number(listing.original_price).toFixed(2)}</span>
-              <span className="text-3xl font-bold text-primary">₺{Number(listing.current_price).toFixed(2)}</span>
+              <span className="text-muted-foreground line-through">
+                Rs.{Number(listing.original_price).toFixed(2)}
+              </span>
+              <span className="text-3xl font-bold text-primary">Rs.{Number(listing.current_price).toFixed(2)}</span>
             </div>
             <CountdownTimer pickupEnd={listing.pickup_end} large />
 
@@ -195,7 +197,7 @@ export function ListingDetail({ listingId }: Props) {
               </Button>
             </div>
             <p className="text-lg font-semibold">
-              Total: <span className="text-primary">₺{total.toFixed(2)}</span>
+              Total: <span className="text-primary">Rs.{total.toFixed(2)}</span>
             </p>
             {impact ? (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">

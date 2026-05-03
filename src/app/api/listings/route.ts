@@ -4,10 +4,8 @@ import { getAuthUser } from "@/lib/auth";
 import { getDiscountedPrice } from "@/lib/discount-engine";
 import { haversineKm } from "@/lib/geo";
 import { createServerSupabase } from "@/lib/supabase";
+import { DEFAULT_MAP_LAT, DEFAULT_MAP_LNG } from "@/lib/region";
 import type { Business, BusinessCategory, Listing, ListingStatus } from "@/types";
-
-const DEFAULT_LAT = 41.0082;
-const DEFAULT_LNG = 28.9784;
 
 type Row = Listing & { businesses: Business | null };
 
@@ -20,8 +18,8 @@ function parseNum(v: string | null, fallback: number): number {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const lat = parseNum(searchParams.get("lat"), DEFAULT_LAT);
-    const lng = parseNum(searchParams.get("lng"), DEFAULT_LNG);
+    const lat = parseNum(searchParams.get("lat"), DEFAULT_MAP_LAT);
+    const lng = parseNum(searchParams.get("lng"), DEFAULT_MAP_LNG);
     const radiusKm = parseNum(searchParams.get("radius"), 5);
     const category = searchParams.get("category") as BusinessCategory | "all" | null;
     const sort = searchParams.get("sort") ?? "nearest";
