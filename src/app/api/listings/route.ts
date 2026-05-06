@@ -88,6 +88,7 @@ const postSchema = z.object({
   photo_url: z.string().optional(),
   category: z.enum(["bakery", "cafe", "restaurant", "grocery"]),
   original_price: z.number().positive(),
+  discount_percent: z.number().min(1).max(90).optional(),
   quantity: z.number().int().positive(),
   pickup_start: z.string().datetime(),
   pickup_end: z.string().datetime(),
@@ -129,7 +130,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Business profile not found" }, { status: 400 });
   }
 
-  const current_price = getDiscountedPrice(body.original_price, pickupEnd);
+  const current_price =
+    typeof body.discount_percent === "number"
+      ? parseFloat((body.original_price * (1 - body.discount_percent / 100)).toFixed(2))
+      : getDiscountedPrice(body.original_price, pickupEnd);
   const status: ListingStatus = "active";
 
   const { data: listing, error } = await supabase

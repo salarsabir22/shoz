@@ -31,10 +31,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { Package, TrendingUp, Leaf, Trash2, Pencil, Banknote } from "lucide-react";
 
 type Stats = {
@@ -62,9 +59,13 @@ const listingSchema = z.object({
   photo_url: z.string().optional(),
   category: z.enum(["bakery", "cafe", "restaurant", "grocery"]),
   original_price: z.preprocess((v) => Number(v), z.number().positive()),
+  discount_percent: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+    z.number().min(1).max(90).optional()
+  ),
   quantity: z.preprocess((v) => Number(v), z.number().int().positive()),
-  pickup_start: z.date(),
-  pickup_end: z.date(),
+  pickup_start: z.string().min(1),
+  pickup_end: z.string().min(1),
   is_mystery_bag: z.boolean(),
 });
 
@@ -139,25 +140,43 @@ export default function BusinessDashboardPage() {
       photo_url: "",
       category: "restaurant",
       original_price: 100,
+      discount_percent: undefined,
       quantity: 4,
-      pickup_start: new Date(),
-      pickup_end: new Date(Date.now() + 2 * 60 * 60 * 1000),
+      pickup_start: new Date().toISOString().slice(0, 16),
+      pickup_end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16),
       is_mystery_bag: false,
     },
   });
 
   const watchEnd = form.watch("pickup_end");
   const watchOrig = form.watch("original_price");
+  const watchDiscount = form.watch("discount_percent");
   const watchMystery = form.watch("is_mystery_bag");
 
   const previewPrice = React.useMemo(() => {
-    if (!watchEnd || !watchOrig) return null;
-    return getDiscountedPrice(watchOrig, watchEnd);
-  }, [watchEnd, watchOrig]);
+    if (!watchOrig) return null;
+    if (typeof watchDiscount === "number" && Number.isFinite(watchDiscount)) {
+      return Number((watchOrig * (1 - watchDiscount / 100)).toFixed(2));
+    }
+    if (!watchEnd) return null;
+    const endDate = new Date(watchEnd);
+    if (Number.isNaN(endDate.getTime())) return null;
+    return getDiscountedPrice(watchOrig, endDate);
+  }, [watchEnd, watchOrig, watchDiscount]);
 
   async function onCreate(values: ListingForm) {
     if (!values.is_mystery_bag && !values.description?.trim()) {
       toast({ title: "Add a description", variant: "destructive" });
+      return;
+    }
+    const pickupStartDate = new Date(values.pickup_start);
+    const pickupEndDate = new Date(values.pickup_end);
+    if (Number.isNaN(pickupStartDate.getTime()) || Number.isNaN(pickupEndDate.getTime())) {
+      toast({ title: "Pick valid start and end date/time", variant: "destructive" });
+      return;
+    }
+    if (pickupEndDate <= pickupStartDate) {
+      toast({ title: "End time must be after start time", variant: "destructive" });
       return;
     }
     const res = await fetch("/api/listings", {
@@ -170,9 +189,10 @@ export default function BusinessDashboardPage() {
         photo_url: values.photo_url || undefined,
         category: values.category,
         original_price: values.original_price,
+        discount_percent: values.discount_percent,
         quantity: values.quantity,
-        pickup_start: values.pickup_start.toISOString(),
-        pickup_end: values.pickup_end.toISOString(),
+        pickup_start: pickupStartDate.toISOString(),
+        pickup_end: pickupEndDate.toISOString(),
         is_mystery_bag: values.is_mystery_bag,
       }),
     });
@@ -219,6 +239,7 @@ export default function BusinessDashboardPage() {
     const disc = calculateDiscount(simulatedEnd);
     return { label: `${m} min to close`, discount: disc };
   });
+  const manualDiscountEnabled = typeof watchDiscount === "number" && Number.isFinite(watchDiscount);
 
   return (
     <div className="space-y-8">
@@ -313,7 +334,9 @@ export default function BusinessDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Create listing</CardTitle>
-              <CardDescription>Discount is computed from pickup end time.</CardDescription>
+              <CardDescription>
+                Set your own discount, or leave it empty to use automatic time-based discount.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -410,6 +433,30 @@ export default function BusinessDashboardPage() {
                     />
                     <FormField
                       control={form.control}
+                      name="discount_percent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={90}
+                              step="1"
+                              placeholder="Auto"
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">
+                            Leave empty for auto discount based on end time.
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="quantity"
                       render={({ field }) => (
                         <FormItem>
@@ -429,16 +476,9 @@ export default function BusinessDashboardPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Pickup start</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
-                                {field.value ? format(field.value, "PPp") : "Pick date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={(d) => d && field.onChange(d)} />
-                            </PopoverContent>
-                          </Popover>
+                          <FormControl>
+                            <Input type="datetime-local" value={field.value ?? ""} onChange={field.onChange} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -449,36 +489,31 @@ export default function BusinessDashboardPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Pickup end</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
-                                {field.value ? format(field.value, "PPp") : "Pick date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={(d) => d && field.onChange(d)} />
-                            </PopoverContent>
-                          </Popover>
+                          <FormControl>
+                            <Input type="datetime-local" value={field.value ?? ""} onChange={field.onChange} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
                   <div className="rounded-lg border bg-muted/40 p-3 text-sm">
-                    <p className="font-medium">Discount preview</p>
+                    <p className="font-medium">{manualDiscountEnabled ? "Manual discount preview" : "Auto discount preview"}</p>
                     <p className="mt-1 text-muted-foreground">
-                      Current dynamic price:{" "}
+                      Current price:{" "}
                       <span className="font-mono font-semibold text-foreground">
                         {previewPrice !== null ? `Rs.${previewPrice.toFixed(2)}` : "—"}
                       </span>
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {milestones.map((m) => (
-                        <Badge key={m.label} variant="outline">
-                          {m.label}: {m.discount}%
-                        </Badge>
-                      ))}
-                    </div>
+                    {!manualDiscountEnabled ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {milestones.map((m) => (
+                          <Badge key={m.label} variant="outline">
+                            {m.label}: {m.discount}%
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                   <Button type="submit">Publish listing</Button>
                 </form>
